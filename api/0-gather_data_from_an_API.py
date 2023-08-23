@@ -1,32 +1,42 @@
 #!/usr/bin/python3
-"""Script to return info about todo list progress"""
-import requests
-import sys
+""" Console Module """
 
+"""
+Python script that uses this  rest api for given
+employee ID to return info about his/her todo list progress
+"""
 
-if __name__ == "__main__":
-    employee_id = int(sys.argv[1])
+if __name__ == '__main__':
+    import json
+    from requests import get
+    from sys import argv
+    """module documented"""
 
-    api_url = f'https://jsonplaceholder.typicode.com/users/{employee_id}'
-    response = requests.get(api_url)
+    employee_ID = argv[1]
+    all_todos = get(f'https://jsonplaceholder.typicode.com/todos')
+    users = get(f'https://jsonplaceholder.typicode.com/users')
 
-    employee_name = response.json()["name"]
+    employee_list = json.loads(all_todos.text)
+    users = json.loads(users.text)
+    for user in users:
+        if user.get('id') == int(employee_ID):
+            employee_name = user.get('name')
 
-    api_url2 = f'https://jsonplaceholder.typicode.com/todos?userId={employee_id}'
-    response = requests.get(api_url2)
+    completed_task = 0
+    task_count = 0
+    task_list = []
+    for employee in employee_list:
+        if employee.get('userId') == int(employee_ID):
+            task_count += 1
+            if employee.get('completed') is True:
+                completed_task += 1
+                task_list.append(employee['title'])
 
-    tasks = response.json()
-    total_tasks = len(tasks)
+    firstline = (
+        f'Employee {employee_name} is done'
+        f' with tasks({completed_task}/{task_count}):'
+    )
+    print(firstline)
 
-    completed_tasks = []
-    for task in tasks:
-        if task["completed"]:
-            completed_tasks.append(task)
-
-    n_total_tasks = len(completed_tasks)
-
-    print(
-        f"Employee {employee_name} is done with tasks({n_total_tasks}/{total_tasks}):")
-
-    for task in completed_tasks:
-        print(f"\t {task['title']}")
+    for task in task_list:
+        print(f'\t {task}')
